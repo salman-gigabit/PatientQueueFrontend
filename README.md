@@ -17,3 +17,10 @@ Then, run the following command to install the necessary dependencies:
 ```bash
 cd frontend
 npm install
+
+## Development
+
+Start the development server:
+```bash
+npm run dev
+```
