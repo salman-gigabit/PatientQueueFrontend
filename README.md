@@ -19,15 +19,19 @@
 
 ## Quick Start
 
-### 1. Clone the repository
-
-```powershell
-git clone https://github.com/101rror/myClinic.git
-cd myClinic
-```
-
 ### 1. Start Backend
 
+**macOS/Linux:**
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+
+pip install fastapi uvicorn
+uvicorn app.main:app --reload --port 8000
+```
+
+**Windows:**
 ```powershell
 cd backend
 python -m venv .venv
@@ -39,12 +43,8 @@ uvicorn app.main:app --reload --port 8000
 
 ### 2. Start Frontend
 
-```powershell
+```bash
 cd frontend
 npm install
 npm run dev
-```
-# PatientQueue
-
-
-add new commit 
+``` 
