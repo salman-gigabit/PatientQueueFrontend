@@ -33,12 +33,18 @@ export default function UserHome() {
     setLoading(true);
     setError("");
     try {
+      const token = localStorage.getItem("token");
+      console.log("Refresh - Token exists:", !!token);
       const p = await getPatients();
       const s = await getStats();
       setPatients(p.data);
       setStats(s.data);
-    } catch {
-      setError("Failed to refresh data. Check the backend.");
+    } catch (err) {
+      console.error("Failed to refresh data:", err);
+      console.error("Error response:", err.response?.data);
+      console.error("Error status:", err.response?.status);
+      const errorMessage = err.response?.data?.message || err.response?.data?.detail || "Failed to refresh data. Check the backend.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -68,11 +74,19 @@ export default function UserHome() {
     });
 
     try {
+      console.log("Adding patient:", { name, problem, priority });
+      const token = localStorage.getItem("token");
+      console.log("Token exists:", !!token);
       await apiAddPatient({ name, problem, priority });
+      console.log("Patient added successfully");
       await refresh();
-    } catch {
+    } catch (err) {
+      console.error("Failed to add patient:", err);
+      console.error("Error response:", err.response?.data);
+      console.error("Error status:", err.response?.status);
       setPatients((prev) => prev.filter((p) => p.id !== tempId));
-      setError("Failed to add patient. Try again.");
+      const errorMessage = err.response?.data?.message || err.response?.data?.detail || err.message || "Failed to add patient. Try again.";
+      setError(errorMessage);
     }
   };
 

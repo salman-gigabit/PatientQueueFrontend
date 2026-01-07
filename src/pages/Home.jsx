@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getPatients,
   getStats,
@@ -10,10 +11,25 @@ import PatientList from "../components/PatientList";
 import StatsPanel from "../components/StatsPanel";
 
 export default function Home() {
+  const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("currentUser") || "null");
+    setCurrentUser(user);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("currentUser");
+    window.dispatchEvent(new CustomEvent("auth", { detail: { type: "logout" } }));
+    navigate("/login");
+  };
 
   const refresh = async () => {
     setLoading(true);
@@ -108,7 +124,53 @@ export default function Home() {
 
   return (
     <div className="container">
-      <h1>Clinic Queue System</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h1>Clinic Queue System</h1>
+        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+          {currentUser && (
+            <div 
+              style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "10px", 
+                cursor: "pointer" 
+              }} 
+              onClick={() => navigate("/profile")}
+            >
+              <div
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  background: "#667eea",
+                  color: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "20px",
+                  fontWeight: "700",
+                  textTransform: "uppercase"
+                }}
+              >
+                {(currentUser.name || currentUser.email || "U").charAt(0).toUpperCase()}
+              </div>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            style={{
+              padding: "12px 17px",
+              background: "#dc3545",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            Logout
+          </button>
+        </div>
+      </div>
 
       {error && <div className="error">{error}</div>}
       {loading && <div className="info">Loading...</div>}

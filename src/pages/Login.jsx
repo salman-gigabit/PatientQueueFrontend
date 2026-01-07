@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { login } from "../api/auth";
+import { login, getCurrentUser, setAuthToken } from "../api/auth";
 import "./Auth.css";
 
 export default function Login() {
@@ -8,12 +8,6 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Ensure component is visible
-  if (typeof window !== 'undefined') {
-    document.body.style.margin = '0';
-    document.body.style.padding = '0';
-  }
-
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -21,63 +15,73 @@ export default function Login() {
 
     try {
       const response = await login(email, password);
-      const { token, user } = response.data;
 
-      // Store token and user info
-      localStorage.setItem("token", token);
-      localStorage.setItem("currentUser", JSON.stringify(user));
+      // Extract token
+      const token =
+        response.data?.token ||
+        response.data?.authToken ||
+        response.data?.access_token ||
+        response.data?.accessToken ||
+        response.data?.jwt ||
+        response.data?.jwt_token;
+
+      if (!token) throw new Error("No token received from server");
+
+      // Store token
+      const cleanToken = token.trim();
+      localStorage.setItem("token", cleanToken);
       localStorage.setItem("isLoggedIn", "true");
-      
-      // Dispatch event to notify App component
-      window.dispatchEvent(new Event("storage"));
-      
-      // Redirect to home
+      setAuthToken(cleanToken);
+
+      // Fetch full user
+      let user;
+      try {
+        const userResponse = await getCurrentUser();
+        user = userResponse.data;
+      } catch {
+        // fallback to login response
+        user =
+          response.data?.user ||
+          response.data?.data?.user ||
+          (response.data?.email
+            ? { email: response.data.email, name: response.data.name, role: response.data.role || "user", id: response.data.id }
+            : null) ||
+          { email, name: "", role: "user" };
+      }
+
+      if (!user.role) user.role = "user";
+      if (!user.email) user.email = email;
+      if (!user.name) user.name = "";
+
+      localStorage.setItem("currentUser", JSON.stringify(user));
+      window.dispatchEvent(new CustomEvent("auth", { detail: { type: "login" } }));
+
       window.location.href = "/";
     } catch (err) {
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError("Invalid email or password");
-      }
+      console.error(err);
+      setError(err.response?.data?.message || "Invalid email or password");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container" style={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", padding: "20px" }}>
-      <div className="auth-card" style={{ background: "white", padding: "40px", borderRadius: "12px", maxWidth: "400px", width: "100%", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)" }}>
-        <h2 style={{ margin: "0 0 30px 0", textAlign: "center", color: "#333", fontSize: "28px" }}>Login Page</h2>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2>Login</h2>
         {error && <div className="error-message">{error}</div>}
         <form onSubmit={handleLogin}>
           <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="Enter your email"
-            />
+            <label>Email</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="Enter your password"
-            />
+            <label>Password</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
-          <button type="submit" disabled={loading} className="auth-button">
-            {loading ? "Logging in..." : "Login"}
-          </button>
+          <button type="submit" disabled={loading}>{loading ? "Logging in..." : "Login"}</button>
         </form>
-        
-        <p className="auth-link">
+        <p>
           Don't have an account? <a href="/signup">Sign up</a>
         </p>
       </div>
