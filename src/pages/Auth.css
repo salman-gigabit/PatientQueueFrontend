@@ -243,3 +243,52 @@
   }
 }
 
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .auth-container {
+    background: linear-gradient(135deg, #4a5568 0%, #5a4a6b 100%);
+  }
+
+  .auth-card {
+    background: #2d2d2d;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .auth-card h2 {
+    color: #e0e0e0;
+  }
+
+  .form-group label {
+    color: #d0d0d0;
+  }
+
+  .form-group input {
+    background: #1a1a1a;
+    color: #e0e0e0;
+    border-color: #444;
+  }
+
+  .form-group input:focus {
+    border-color: #667eea;
+  }
+
+  .auth-link {
+    color: #b0b0b0;
+  }
+
+  .error-message {
+    background: #4a1a1a;
+    color: #ff6b6b;
+    border-color: #6a2a2a;
+  }
+
+  /* Profile page field backgrounds - override inline styles */
+  .auth-card .form-group > div {
+    background: #1a1a1a !important;
+    color: #e0e0e0 !important;
+  }
+
+  .auth-card .form-group > div[style*="#666"] {
+    color: #b0b0b0 !important;
+  }
+}
